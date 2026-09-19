@@ -7,30 +7,6 @@ import {
 } from 'lucide-react';
 import { authAPI } from '../services/api';
 
-const PRESET_ACCOUNTS = [
-  {
-    name: "Gmail Account",
-    email: "user@gmail.com",
-    role: "Personal / Work Gmail",
-    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=GmailUser",
-    badge: "Recommended"
-  },
-  {
-    name: "Sarah Jenkins",
-    email: "sarah.jenkins@gmail.com",
-    role: "VP of Engineering",
-    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=SarahJenkins",
-    badge: "Fast Triage"
-  },
-  {
-    name: "Alex Rivera",
-    email: "alex.rivera@techcorp.io",
-    role: "Tech Lead & DevOps",
-    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=AlexRivera",
-    badge: "High Volume"
-  }
-];
-
 export default function LoginPage({ onLoginSuccess }) {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingAction, setLoadingAction] = useState('');
@@ -310,58 +286,6 @@ export default function LoginPage({ onLoginSuccess }) {
                 </svg>
               )}
               <span>{loadingAction === 'google_oauth' ? 'Authenticating...' : 'Sign in with Google Account'}</span>
-            </button>
-          </div>
-
-          {/* Quick Preset Account Selector */}
-          <div className="space-y-2 pt-1">
-            <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-              Quick Accounts
-            </div>
-            {PRESET_ACCOUNTS.map((acc) => (
-              <button
-                key={acc.email}
-                onClick={() => handlePresetLogin(acc)}
-                disabled={isLoading}
-                className="w-full p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 hover:bg-indigo-50/60 dark:hover:bg-indigo-950/40 hover:border-indigo-300 dark:hover:border-indigo-700/60 transition flex items-center justify-between group disabled:opacity-60"
-              >
-                <div className="flex items-center space-x-3">
-                  <img
-                    src={acc.avatar}
-                    alt={acc.name}
-                    className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-950 p-0.5 border border-indigo-200 dark:border-indigo-800"
-                  />
-                  <div className="text-left">
-                    <div className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition flex items-center gap-1.5">
-                      <span>{acc.name}</span>
-                      <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">({acc.role})</span>
-                    </div>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                      {acc.email}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-1.5">
-                  {loadingAction === acc.email ? (
-                    <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition transform group-hover:translate-x-0.5" />
-                  )}
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {/* Quick Access Workspace Button */}
-          <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80">
-            <button
-              onClick={handleDemoLogin}
-              disabled={isLoading}
-              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-indigo-500/10 hover:from-indigo-500/20 hover:to-purple-500/20 border border-indigo-200 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-300 font-bold text-xs flex items-center justify-center space-x-2 transition"
-            >
-              <Zap className="w-3.5 h-3.5 text-indigo-500" />
-              <span>Launch Quick Workspace Access</span>
             </button>
           </div>
 

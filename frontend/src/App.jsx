@@ -160,7 +160,7 @@ export default function App() {
     }
   };
 
-  const activeUser = user || { name: "Gmail User", email: "user@gmail.com" };
+  const activeUser = user;
 
   if (showLandingPage && !user) {
     if (showLoginModal) {
@@ -169,7 +169,7 @@ export default function App() {
     return (
       <LandingPage
         onConnectGmail={() => setShowLoginModal(true)}
-        onQuickAccess={() => handleLoginSuccess({ name: "Demo User", email: "user@gmail.com" })}
+        onQuickAccess={() => setShowLoginModal(true)}
         theme={theme}
         onToggleTheme={toggleTheme}
       />
