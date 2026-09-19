@@ -118,6 +118,26 @@ export default function App() {
     }
   };
 
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    const error = urlParams.get('error');
+    if (token) {
+      localStorage.setItem('smart_email_token', token);
+      authAPI.getMe().then((userData) => {
+        if (userData && userData.email) {
+          handleLoginSuccess(userData);
+        }
+      }).catch(e => console.error("Error loading user profile:", e));
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (error) {
+      setShowLandingPage(true);
+      setShowLoginModal(true);
+      showToast("Authentication failed or cancelled. Please try again.");
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
   const handleLoginSuccess = (userObj) => {
     setUser(userObj);
     localStorage.setItem('smart_email_user', JSON.stringify(userObj));
@@ -129,10 +149,13 @@ export default function App() {
 
   const handleLogout = () => {
     authAPI.logout();
+    localStorage.removeItem('smart_email_user');
+    localStorage.removeItem('smart_email_token');
     setUser(null);
     setEmails([]);
     setSelectedEmail(null);
     setShowLandingPage(true);
+    setShowLoginModal(true);
     showToast("Signed out successfully.");
   };
 
@@ -319,6 +342,7 @@ export default function App() {
         user={activeUser}
         theme={theme}
         onToggleTheme={toggleTheme}
+        onLogout={handleLogout}
       />
 
       {/* Toast Alert */}

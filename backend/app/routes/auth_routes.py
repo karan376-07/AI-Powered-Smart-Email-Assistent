@@ -121,16 +121,8 @@ async def oauth_callback(code: str = Query(None), error: str = Query(None)):
         except Exception as e:
             print(f"Live Google OAuth token exchange error: {e}")
 
-    # Fallback to signing Google OAuth session token
-    token = create_access_token(data={
-        "sub": "usr-google-oauth",
-        "email": "google.user@gmail.com",
-        "name": "Google Account User",
-        "avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=GoogleUser",
-        "is_demo": False,
-        "connected_gmail": True
-    })
-    return RedirectResponse(url=f"{settings.FRONTEND_URL}/?token={token}")
+    # On OAuth failure or missing code, redirect to login with error query param
+    return RedirectResponse(url=f"{settings.FRONTEND_URL}/login?error=auth_failed")
 
 @router.get("/me", response_model=UserProfile)
 def get_me(current_user: UserProfile = Depends(get_current_user)):

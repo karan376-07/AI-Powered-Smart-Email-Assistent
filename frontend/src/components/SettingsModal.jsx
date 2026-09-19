@@ -4,7 +4,7 @@ import {
   CheckCircle2, ChevronRight, Sliders, Globe, Bot, Mic
 } from 'lucide-react';
 
-export default function SettingsModal({ isOpen, onClose, user, theme, onToggleTheme }) {
+export default function SettingsModal({ isOpen, onClose, user, theme, onToggleTheme, onLogout }) {
   if (!isOpen) return null;
 
   const [enableSummarization, setEnableSummarization] = useState(true);
@@ -161,10 +161,23 @@ export default function SettingsModal({ isOpen, onClose, user, theme, onToggleTh
           </div>
         </div>
 
-        {/* Section 3: About */}
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-[11px] text-slate-400 font-medium">
-          <span>About</span>
-          <span>AI Email Assistant v1.0.0</span>
+        {/* Section 3: Account & About */}
+        <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
+          {onLogout && (
+            <button
+              onClick={() => {
+                onClose();
+                onLogout();
+              }}
+              className="w-full py-2.5 px-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200 dark:border-rose-800/60 text-rose-600 dark:text-rose-400 font-bold text-xs flex items-center justify-center space-x-2 transition"
+            >
+              <span>Sign Out / Switch Account</span>
+            </button>
+          )}
+          <div className="flex justify-between items-center text-[11px] text-slate-400 font-medium">
+            <span>About</span>
+            <span>AI Email Assistant v1.0.0</span>
+          </div>
         </div>
       </div>
     </div>
