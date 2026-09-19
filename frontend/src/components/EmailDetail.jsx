@@ -7,6 +7,7 @@ import { emailsAPI } from '../services/api';
 
 export default function EmailDetail({
   email,
+  currentUser,
   onSendReply,
   language = 'en',
   onToggleLanguage,
@@ -20,6 +21,7 @@ export default function EmailDetail({
   const [phishingStatus, setPhishingStatus] = useState(null);
 
   const activeEmail = email;
+  const myName = currentUser?.name || (currentUser?.email ? currentUser.email.split('@')[0] : "User");
 
   // Perform Phishing Detection on active email change
   useEffect(() => {
@@ -64,9 +66,9 @@ export default function EmailDetail({
         }
       } else {
         if (tone === 'Professional') {
-          text = `Hi ${senderName},\n\nThank you for reaching out. I have received your email regarding '${activeEmail.subject}' and will review the details. I will get back to you with a comprehensive response shortly.\n\nBest regards,\nKaran`;
+          text = `Hi ${senderName},\n\nThank you for reaching out. I have received your email regarding '${activeEmail.subject}' and will review the details. I will get back to you with a comprehensive response shortly.\n\nBest regards,\n${myName}`;
         } else if (tone === 'Friendly') {
-          text = `Hi there!\n\nThanks for sending this over. I'll take a look at it right away and follow up with you soon. Have a great day!\n\nCheers,\nKaran`;
+          text = `Hi there!\n\nThanks for sending this over. I'll take a look at it right away and follow up with you soon. Have a great day!\n\nCheers,\n${myName}`;
         } else {
           text = `Received, thank you. I will follow up shortly.`;
         }

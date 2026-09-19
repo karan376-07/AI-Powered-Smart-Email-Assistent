@@ -77,27 +77,28 @@ export default function LoginPage({ onLoginSuccess }) {
     setIsLoading(true);
     setLoadingAction('google_oauth');
     setErrorMsg('');
-    const targetEmail = customEmail.trim() || "user@gmail.com";
+    const targetEmail = customEmail.trim() || undefined;
     try {
-      const data = await authAPI.getLoginUrl();
+      const data = await authAPI.getLoginUrl(targetEmail);
       const isPlaceholderClient = !data?.url || data.url.includes('your_client_id');
       
-      if (data?.is_live_configured && data?.url && !data.url.includes('demo_auth=true') && !isPlaceholderClient) {
+      if (data?.url && !data.url.includes('demo_auth=true') && !isPlaceholderClient) {
         // Redirect to live production Google OAuth consent page
         window.location.href = data.url;
-      } else {
-        // Seamless Google Account Login
-        const res = await authAPI.googleLogin({
-          email: targetEmail,
-          name: targetEmail.split('@')[0],
-          is_demo: false
-        });
-        const userObj = res?.user || { email: targetEmail, name: targetEmail.split('@')[0] };
-        onLoginSuccess(userObj);
+        return;
       }
+      
+      // Fallback if live credentials not configured
+      const res = await authAPI.googleLogin({
+        email: customEmail.trim() || "user@gmail.com",
+        name: (customEmail.trim() || "User").split('@')[0],
+        is_demo: false
+      });
+      const userObj = res?.user || { email: customEmail.trim() || "user@gmail.com", name: "User" };
+      onLoginSuccess(userObj);
     } catch (e) {
       console.error(e);
-      onLoginSuccess({ email: targetEmail, name: targetEmail.split('@')[0] });
+      onLoginSuccess({ email: customEmail.trim() || "user@gmail.com", name: "User" });
     } finally {
       setIsLoading(false);
       setLoadingAction('');
@@ -110,6 +111,13 @@ export default function LoginPage({ onLoginSuccess }) {
     setLoadingAction(acc.email);
     setErrorMsg('');
     try {
+      const data = await authAPI.getLoginUrl(acc.email);
+      const isPlaceholderClient = !data?.url || data.url.includes('your_client_id');
+      if (data?.url && !isPlaceholderClient) {
+        window.location.href = data.url;
+        return;
+      }
+
       const res = await authAPI.googleLogin({
         email: acc.email,
         name: acc.name,
@@ -138,6 +146,13 @@ export default function LoginPage({ onLoginSuccess }) {
     setLoadingAction('custom_email');
     setErrorMsg('');
     try {
+      const data = await authAPI.getLoginUrl(customEmail.trim());
+      const isPlaceholderClient = !data?.url || data.url.includes('your_client_id');
+      if (data?.url && !isPlaceholderClient) {
+        window.location.href = data.url;
+        return;
+      }
+
       const res = await authAPI.googleLogin({
         email: customEmail.trim(),
         is_demo: false

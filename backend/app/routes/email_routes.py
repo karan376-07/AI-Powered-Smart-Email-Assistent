@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/emails", tags=["Emails"])
 @router.get("/counts")
 def get_email_counts(current_user: UserProfile = Depends(get_current_user)):
     """Return aggregated mailbox counts for sidebar badges and quick stats."""
-    all_emails = db.get_emails(folder="all")
+    all_emails = db.get_emails(folder="all", user_email=current_user.email)
     return {
         "inbox": sum(1 for e in all_emails if e.folder == "inbox"),
         "unread": sum(1 for e in all_emails if not e.is_read and e.folder == "inbox"),
@@ -46,7 +46,8 @@ def list_emails(
         search=search,
         unread_only=unread_only,
         starred_only=starred_only,
-        has_attachments=has_attachments
+        has_attachments=has_attachments,
+        user_email=current_user.email
     )
 
 
@@ -123,7 +124,8 @@ async def generate_reply(req: GenerateReplyRequest, current_user: UserProfile = 
         body=body,
         sender_name=sender_name,
         tone=req.tone,
-        custom_instructions=req.custom_instructions
+        custom_instructions=req.custom_instructions,
+        user_name=current_user.name
     )
     return GenerateReplyResponse(**res)
 
@@ -172,7 +174,7 @@ async def compose_email(req: ComposeEmailRequest, current_user: UserProfile = De
     # If sent to self or current user, also add an inbox copy for instant local receipt testing
     recip = (req.recipient or "").strip().lower()
     user_email_clean = (current_user.email or "").strip().lower()
-    if recip == user_email_clean or "self" in recip or "me@" in recip or "karan" in recip:
+    if recip == user_email_clean or "self" in recip or "me@" in recip or user_email_clean in recip:
         import copy
         inbox_copy = copy.deepcopy(email)
         inbox_copy.id = f"em-inbox-{random.randint(1000, 9999)}"

@@ -26,14 +26,12 @@ class DemoLoginRequest(BaseModel):
     name: str = "Demo Admin"
 
 @router.get("/login-url")
-def get_login_url():
+def get_login_url(email: Optional[str] = None):
     """Generates the Google OAuth authorization redirect URL."""
     if settings.is_demo:
-        # In demo mode, point directly to a simulated callback
         return {"url": f"{settings.FRONTEND_URL}/login?mode=demo"}
         
     try:
-        # Construct client configuration dict
         client_config = {
             "web": {
                 "client_id": settings.GOOGLE_CLIENT_ID,
@@ -49,15 +47,19 @@ def get_login_url():
             redirect_uri=settings.GOOGLE_REDIRECT_URI,
             autogenerate_code_verifier=False
         )
-        auth_url, state = flow.authorization_url(
-            access_type='offline',
-            include_granted_scopes='true',
-            prompt='consent'
-        )
-        return {"url": auth_url, "state": state}
+        kwargs = {
+            "access_type": "offline",
+            "include_granted_scopes": "true",
+            "prompt": "consent"
+        }
+        if email:
+            kwargs["login_hint"] = email
+            
+        auth_url, state = flow.authorization_url(**kwargs)
+        return {"url": auth_url, "state": state, "is_live_configured": True}
     except Exception as e:
         logger.error(f"Error generating OAuth URL: {e}")
-        return {"url": f"{settings.FRONTEND_URL}/login?mode=demo", "error": str(e)}
+        return {"url": f"{settings.FRONTEND_URL}/login?mode=demo", "error": str(e), "is_live_configured": False}
 
 @router.get("/callback")
 async def oauth_callback(code: str):

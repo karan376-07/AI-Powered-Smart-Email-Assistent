@@ -31,7 +31,7 @@ export default function Sidebar({
     { id: 'trash', label: 'Trash', icon: Trash2 },
   ];
 
-  const userEmail = user?.email || "karan***@gmail.com";
+  const userEmail = user?.email || "user@gmail.com";
 
   return (
     <aside className="w-64 border-r border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#0B0F19] flex flex-col justify-between p-3 select-none flex-shrink-0 h-[calc(100vh-4rem)] transition-colors">

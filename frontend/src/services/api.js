@@ -133,9 +133,9 @@ export const authAPI = {
     }
   },
 
-  getLoginUrl: async () => {
+  getLoginUrl: async (email) => {
     try {
-      const res = await api.get('/api/auth/login-url');
+      const res = await api.get('/api/auth/login-url', { params: { email } });
       return res.data;
     } catch (e) {
       console.warn('Backend login-url endpoint unreachable:', e.message);
@@ -339,9 +339,11 @@ export const emailsAPI = {
       const res = await api.post('/api/emails/generate-reply', payload);
       return res.data;
     } catch (e) {
+      const savedUser = JSON.parse(localStorage.getItem('smart_email_user') || '{}');
       const tone = payload?.tone || 'Professional';
+      const myName = savedUser.name || 'User';
       return {
-        reply_body: `Hi,\n\nThank you for reaching out regarding "${payload?.subject || 'this email'}". I have reviewed the details and will proceed with the necessary action items.\n\nBest regards,\n${payload?.sender_name || 'Karan'}`,
+        reply_body: `Hi,\n\nThank you for reaching out regarding "${payload?.subject || 'this email'}". I have reviewed the details and will proceed with the necessary action items.\n\nBest regards,\n${myName}`,
         tone
       };
     }
@@ -372,11 +374,12 @@ export const emailsAPI = {
       }
       return emailItem;
     } catch (e) {
+      const savedUser = JSON.parse(localStorage.getItem('smart_email_user') || '{}');
       const newEmail = {
         id: "msg_sent_" + Date.now(),
         thread_id: "th_sent_" + Date.now(),
-        sender_name: `${data.sender_name || 'You'}`,
-        sender_email: data.sender_email || 'user@gmail.com',
+        sender_name: `${data.sender_name || savedUser.name || 'You'}`,
+        sender_email: data.sender_email || savedUser.email || 'user@gmail.com',
         recipient_email: data.recipient,
         subject: data.subject,
         date: "Just now",

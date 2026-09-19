@@ -462,10 +462,85 @@ Have an awesome day ahead!""",
         search: Optional[str] = None,
         unread_only: bool = False,
         starred_only: bool = False,
-        has_attachments: Optional[bool] = None
+        has_attachments: Optional[bool] = None,
+        user_email: Optional[str] = None
     ) -> List[EmailItem]:
+        clean_user = (user_email or "").strip().lower()
+        demo_accounts = {"demo.user@gmail.com", "user@gmail.com", "sarah.jenkins@gmail.com", "alex.rivera@techcorp.io", "karan@gmail.com", "karan.assistant@work.com"}
+
+        # If user is a custom non-demo user, check if we need to seed a personalized welcome email for them
+        if clean_user and clean_user not in demo_accounts:
+            user_has_emails = any(
+                (getattr(e, 'recipient_email', '') or '').lower() == clean_user or
+                (getattr(e, 'sender_email', '') or '').lower() == clean_user
+                for e in self.emails.values()
+            )
+            if not user_has_emails:
+                username = clean_user.split('@')[0].replace('.', ' ').replace('_', ' ').replace('-', ' ').title()
+                welcome_id = f"em-welcome-{abs(hash(clean_user)) % 10000}"
+                now = time.time()
+                welcome_email = EmailItem(
+                    id=welcome_id,
+                    sender_name="AI Smart Assistant Team",
+                    sender_email="assistant@smart-email.ai",
+                    recipient_email=clean_user,
+                    subject=f"Welcome {username}! Your Smart AI Inbox is Ready",
+                    snippet=f"Hello {username}, welcome to AI-Powered Smart Email Assistant! Your personal inbox is now connected and protected by Gemini NLP...",
+                    body=f"""Hello {username},
+
+Welcome to your personalized AI-Powered Smart Email Assistant!
+
+Your account ({clean_user}) is now active. Here is what you can do:
+1. Compose outgoing emails using the '+ Compose' button to test AI auto-analysis.
+2. Generate smart responses in Professional, Friendly, or Urgent tones.
+3. Upload PDF documents to test the OCR Attachment Scanner.
+4. Run Phishing Security scans to detect suspicious messages.
+
+If you connect your live Google Account in Google Cloud setup, your real Gmail threads will auto-synchronize here.
+
+Best regards,
+The AI Smart Email Team""",
+                    category=CategoryEnum.WORK,
+                    priority=PriorityEnum.HIGH,
+                    date="Just now",
+                    timestamp=now,
+                    is_read=False,
+                    is_starred=True,
+                    is_spam=False,
+                    has_attachments=False,
+                    attachments=[],
+                    summary=EmailSummary(
+                        bullet_points=[
+                            f"Account setup complete for {clean_user}.",
+                            "Gemini NLP engine and OCR attachment scanner are active.",
+                            "Ready to compose, summarize, and manage emails."
+                        ],
+                        one_liner=f"Welcome to AI Smart Email Assistant for {clean_user}.",
+                        urgency_reason="Welcome onboarding notification.",
+                        sentiment="Positive",
+                        key_deadlines=[]
+                    ),
+                    action_items=[
+                        ActionItem(
+                            task="Explore AI Assistant features and compose your first test email",
+                            due_date="Today",
+                            completed=False,
+                            is_meeting=False
+                        )
+                    ],
+                    folder="inbox"
+                )
+                self.emails[welcome_email.id] = welcome_email
+
         results = []
         for email in self.emails.values():
+            # If a custom non-demo user is logged in, filter out generic sample emails addressed to demo account
+            if clean_user and clean_user not in demo_accounts:
+                recip = (getattr(email, 'recipient_email', '') or '').lower()
+                sendr = (getattr(email, 'sender_email', '') or '').lower()
+                if recip != clean_user and sendr != clean_user and "welcome" not in email.id:
+                    continue
+
             if folder and folder.lower() != "all" and email.folder.lower() != folder.lower():
                 continue
             if category and email.category.value.lower() != category.lower():

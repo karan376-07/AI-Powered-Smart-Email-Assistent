@@ -185,9 +185,11 @@ Body:
         body: str,
         sender_name: str,
         tone: str = "Professional",
-        custom_instructions: Optional[str] = None
+        custom_instructions: Optional[str] = None,
+        user_name: Optional[str] = None
     ) -> Dict[str, str]:
         """Generates contextual AI email reply based on tone and intent."""
+        my_name = user_name or "User"
         # If Gemini model is active with real API key
         if self.model and self.api_key and not self.api_key.startswith("mock") and len(self.api_key.strip()) > 15:
             try:
@@ -202,7 +204,7 @@ Additional user instruction: {custom_instructions or 'None'}
 Rules:
 - Write in a natural, polished human manner.
 - Be concise and actionable.
-- Sign off cleanly.
+- Sign off cleanly with Best regards, {my_name}.
 - Output ONLY the body text of the reply.
 """
                 raw_text = await asyncio.wait_for(
@@ -234,7 +236,7 @@ I've gone through the details and everything looks great on my end. I will make 
 Let's catch up soon if anything else pops up!
 
 Best regards,
-Karan"""
+{my_name}"""
 
         elif tone.lower() == "direct" or tone.lower() == "formal":
             reply_text = f"""{salutation}
@@ -246,7 +248,7 @@ I have reviewed the requirements and confirmed the timeline. All scheduled check
 I will share the finalized update as soon as the next phase completes.
 
 Sincerely,
-Karan"""
+{my_name}"""
 
         elif "decline" in tone.lower():
             reply_text = f"""{salutation}
@@ -258,7 +260,7 @@ Unfortunately, due to current high-priority commitments and upcoming deployment 
 I appreciate your understanding and hope we can collaborate on future cycles.
 
 Warm regards,
-Karan"""
+{my_name}"""
 
         elif "urgent" in tone.lower():
             reply_text = f"""{salutation}
@@ -268,7 +270,7 @@ Acknowledged with highest priority.
 I am immediately looking into this and verifying the staging/production parameters right now. I will provide a status report within the next 30 minutes.{custom_clause}
 
 Thanks,
-Karan"""
+{my_name}"""
 
         else: # Default Professional
             reply_text = f"""{salutation}
@@ -280,7 +282,7 @@ I have reviewed the email details and action items. Everything is clear, and I a
 Please let me know if you need any additional documentation or sign-offs.
 
 Best regards,
-Karan"""
+{my_name}"""
 
         return {
             "reply_text": reply_text.strip(),

@@ -14,7 +14,7 @@ export default function AIAssistantPanel({
   onOpenSmartReply,
   onOpenVoiceCommand
 }) {
-  const userName = user?.name || (user?.email ? user.email.split('@')[0] : "Karan");
+  const userName = user?.name || (user?.email ? user.email.split('@')[0] : "User");
 
   return (
     <aside className="w-80 lg:w-84 border-l border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-[#0B0F19] p-4 flex flex-col space-y-4 overflow-y-auto select-none flex-shrink-0 transition-colors">

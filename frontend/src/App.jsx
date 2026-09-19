@@ -160,6 +160,8 @@ export default function App() {
     }
   };
 
+  const activeUser = user || { name: "Gmail User", email: "user@gmail.com" };
+
   if (showLandingPage && !user) {
     if (showLoginModal) {
       return <LoginPage onLoginSuccess={handleLoginSuccess} />;
@@ -167,7 +169,7 @@ export default function App() {
     return (
       <LandingPage
         onConnectGmail={() => setShowLoginModal(true)}
-        onQuickAccess={() => handleLoginSuccess({ name: "Karan Elumalai", email: "karan@gmail.com" })}
+        onQuickAccess={() => handleLoginSuccess({ name: "Demo User", email: "user@gmail.com" })}
         theme={theme}
         onToggleTheme={toggleTheme}
       />
@@ -187,7 +189,7 @@ export default function App() {
         onOpenSettings={() => setIsSettingsOpen(true)}
         unreadCount={emails.filter(e => !e.is_read).length}
         urgentCount={emails.filter(e => e.priority === 'High').length}
-        user={user || { name: "Karan Elumalai", email: "karan@gmail.com" }}
+        user={activeUser}
         onLogout={handleLogout}
         theme={theme}
         onToggleTheme={toggleTheme}
@@ -209,7 +211,7 @@ export default function App() {
           setSelectedCategory={setSelectedCategory}
           unreadCount={emails.filter(e => !e.is_read).length}
           urgentCount={emails.filter(e => e.priority === 'High').length}
-          user={user || { name: "Karan Elumalai", email: "karan@gmail.com" }}
+          user={activeUser}
           onOpenAISummary={() => setIsAISummaryOpen(true)}
           onOpenPhishingCenter={() => setIsPhishingOpen(true)}
           onOpenSmartReply={() => showToast("Select an email thread to view AI Smart Reply")}
@@ -246,6 +248,7 @@ export default function App() {
             <div className="hidden md:flex flex-1 flex-col h-full border-r border-slate-200 dark:border-slate-800/80">
               <EmailDetail
                 email={selectedEmail}
+                currentUser={activeUser}
                 onSendReply={async (payload) => {
                   await emailsAPI.composeEmail(payload);
                   loadEmails();
@@ -270,7 +273,7 @@ export default function App() {
         {/* Right AI Assistant Widget Column */}
         {activeView === 'inbox' && (
           <AIAssistantPanel
-            user={user || { name: "Karan Elumalai", email: "karan@gmail.com" }}
+            user={activeUser}
             totalEmails={emails.length || 12}
             importantCount={emails.filter(e => e.priority === 'High' || e.is_starred).length || 5}
             unreadCount={emails.filter(e => !e.is_read).length || 3}
@@ -313,7 +316,7 @@ export default function App() {
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
-        user={user || { name: "Karan Elumalai", email: "karan@gmail.com" }}
+        user={activeUser}
         theme={theme}
         onToggleTheme={toggleTheme}
       />
