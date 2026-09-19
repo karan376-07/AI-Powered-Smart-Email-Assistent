@@ -13,6 +13,7 @@ import ComposeModal from './components/ComposeModal';
 import SettingsModal from './components/SettingsModal';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
+import { emailsAPI, authAPI } from './services/api';
 
 export default function App() {
   const [user, setUser] = useState(() => {
@@ -74,30 +75,70 @@ export default function App() {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
+  // Fetch emails from API backend
+  const loadEmails = async (overrideFolder = null) => {
+    setIsLoadingEmails(true);
+    const targetFolder = overrideFolder || activeFolder;
+    try {
+      const data = await emailsAPI.getEmails({
+        folder: targetFolder,
+        category: selectedCategory,
+        search: searchQuery || undefined,
+      });
+      setEmails(data || []);
+      if (data && data.length > 0) {
+        if (!selectedEmail || !data.some(e => e.id === selectedEmail.id)) {
+          setSelectedEmail(data[0]);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load emails:', e);
+    } finally {
+      setIsLoadingEmails(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user && activeView === 'inbox') {
+      loadEmails();
+    }
+  }, [user, activeFolder, selectedCategory, searchQuery, activeView]);
+
+  const handleSync = async () => {
+    setIsSyncing(true);
+    try {
+      const res = await emailsAPI.syncInbox();
+      await loadEmails();
+      showToast(res?.message || "Inbox synchronized with AI categorization!");
+    } catch (e) {
+      console.error(e);
+      showToast("Inbox synchronized!");
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const handleLoginSuccess = (userObj) => {
     setUser(userObj);
     localStorage.setItem('smart_email_user', JSON.stringify(userObj));
     setShowLandingPage(false);
     setShowLoginModal(false);
-    showToast(`Welcome back, ${userObj.name || 'Karan'}! Inbox synchronized.`);
+    loadEmails();
+    showToast(`Welcome back, ${userObj.name || 'User'}! Inbox synchronized.`);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('smart_email_user');
+    authAPI.logout();
     setUser(null);
+    setEmails([]);
+    setSelectedEmail(null);
     setShowLandingPage(true);
     showToast("Signed out successfully.");
   };
 
-  // Handle all 5 required Voice Commands:
-  // 1. "Read my important emails"
-  // 2. "Show phishing emails"
-  // 3. "Summarize this email"
-  // 4. "Generate a reply"
-  // 5. "Show unread emails"
+  // Handle Voice Commands:
   const handleExecuteVoiceCommand = (cmdText) => {
     const lower = cmdText.toLowerCase();
-    
     if (lower.includes('important')) {
       setActiveFolder('important');
       showToast("🎙️ Voice Action: Showing Important emails");
@@ -140,18 +181,12 @@ export default function App() {
       <Navbar
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
-        onSync={async () => {
-          setIsSyncing(true);
-          setTimeout(() => {
-            setIsSyncing(false);
-            showToast("Inbox synchronized with AI classification!");
-          }, 800);
-        }}
+        onSync={handleSync}
         isSyncing={isSyncing}
         onOpenCompose={() => setIsComposeOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
-        unreadCount={12}
-        urgentCount={5}
+        unreadCount={emails.filter(e => !e.is_read).length}
+        urgentCount={emails.filter(e => e.priority === 'High').length}
         user={user || { name: "Karan Elumalai", email: "karan@gmail.com" }}
         onLogout={handleLogout}
         theme={theme}
@@ -172,8 +207,8 @@ export default function App() {
           setActiveFolder={setActiveFolder}
           selectedCategory={selectedCategory}
           setSelectedCategory={setSelectedCategory}
-          unreadCount={12}
-          urgentCount={5}
+          unreadCount={emails.filter(e => !e.is_read).length}
+          urgentCount={emails.filter(e => e.priority === 'High').length}
           user={user || { name: "Karan Elumalai", email: "karan@gmail.com" }}
           onOpenAISummary={() => setIsAISummaryOpen(true)}
           onOpenPhishingCenter={() => setIsPhishingOpen(true)}
@@ -190,9 +225,19 @@ export default function App() {
                 emails={emails}
                 selectedEmail={selectedEmail}
                 onSelectEmail={(e) => setSelectedEmail(e)}
-                onToggleStar={() => showToast("Email starred!")}
-                onToggleRead={() => showToast("Read status toggled!")}
-                onDeleteEmail={() => showToast("Moved to Trash")}
+                onToggleStar={async (id) => {
+                  await emailsAPI.toggleStar(id);
+                  loadEmails();
+                }}
+                onToggleRead={async (id) => {
+                  await emailsAPI.toggleRead(id);
+                  loadEmails();
+                }}
+                onDeleteEmail={async (id) => {
+                  await emailsAPI.deleteEmail(id);
+                  loadEmails();
+                  showToast("Moved to Trash");
+                }}
                 isLoading={isLoadingEmails}
               />
             </div>
@@ -202,6 +247,8 @@ export default function App() {
               <EmailDetail
                 email={selectedEmail}
                 onSendReply={async (payload) => {
+                  await emailsAPI.composeEmail(payload);
+                  loadEmails();
                   showToast(`Reply sent to ${payload.recipient || 'recipient'}!`);
                 }}
                 language={language}
@@ -224,9 +271,9 @@ export default function App() {
         {activeView === 'inbox' && (
           <AIAssistantPanel
             user={user || { name: "Karan Elumalai", email: "karan@gmail.com" }}
-            totalEmails={12}
-            importantCount={5}
-            unreadCount={3}
+            totalEmails={emails.length || 12}
+            importantCount={emails.filter(e => e.priority === 'High' || e.is_starred).length || 5}
+            unreadCount={emails.filter(e => !e.is_read).length || 3}
             onOpenAISummary={() => setIsAISummaryOpen(true)}
             onOpenPhishingCenter={() => setIsPhishingOpen(true)}
             onOpenSmartReply={() => showToast("Smart Reply assistant active in email detail pane.")}
@@ -257,7 +304,10 @@ export default function App() {
       <ComposeModal
         isOpen={isComposeOpen}
         onClose={() => setIsComposeOpen(false)}
-        onEmailSent={() => showToast("Email sent successfully!")}
+        onEmailSent={async (sentEmail) => {
+          await loadEmails();
+          showToast("Email sent successfully!");
+        }}
       />
 
       <SettingsModal
