@@ -19,18 +19,7 @@ export default function EmailDetail({
   const [isSending, setIsSending] = useState(false);
   const [phishingStatus, setPhishingStatus] = useState(null);
 
-  // Active email falling back to standard mock if none passed
-  const activeEmail = email || {
-    id: "2",
-    sender_name: "Project Team",
-    sender_email: "project@college.edu",
-    recipient: "karan@gmail.com",
-    subject: "Re: Project Submission - Reminder",
-    timestamp: "09:42 AM",
-    date: "19 Sep 2026",
-    body: "Hi Karan,\n\nThis is a reminder that the final project submission is due tomorrow. Please make sure to submit on time.\n\nBest regards,\nProject Team",
-    ai_generated_reply: "Thank you for the reminder. I have completed the necessary work and will submit it by tomorrow as per the deadline.\n\nBest regards,\nKaran"
-  };
+  const activeEmail = email;
 
   // Perform Phishing Detection on active email change
   useEffect(() => {
@@ -112,6 +101,18 @@ export default function EmailDetail({
       setIsSending(false);
     }
   };
+
+  if (!activeEmail) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center h-full text-slate-400 p-8 text-center select-none">
+        <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 flex items-center justify-center mb-3">
+          <Bot className="w-6 h-6 text-indigo-500" />
+        </div>
+        <h4 className="font-bold text-sm text-slate-700 dark:text-slate-300 mb-1">No Email Selected</h4>
+        <p className="text-xs max-w-xs text-slate-500 dark:text-slate-400">Select an email thread from your inbox feed on the left to view its details and AI reply options.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[#F8FAFC] dark:bg-[#090D17] overflow-y-auto select-none p-4 space-y-4 transition-colors">

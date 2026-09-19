@@ -100,7 +100,7 @@ export default function EmailList({
     }
   ];
 
-  const listItems = emails.length > 0 ? emails : defaultItems;
+  const listItems = emails;
 
   const filteredItems = listItems.filter(item => {
     if (filterTab === 'important') return item.priority === 'High' || item.category === 'Important' || item.is_starred;
