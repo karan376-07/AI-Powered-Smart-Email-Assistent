@@ -14,9 +14,13 @@ from app.auth.auth_handler import get_current_user, UserProfile
 router = APIRouter(prefix="/api/emails", tags=["Emails"])
 
 @router.get("/counts")
-def get_email_counts(current_user: UserProfile = Depends(get_current_user)):
+async def get_email_counts(current_user: UserProfile = Depends(get_current_user)):
     """Return aggregated mailbox counts for sidebar badges and quick stats."""
     all_emails = db.get_emails(folder="all", user_email=current_user.email)
+    if not all_emails:
+        await gmail_service.sync_inbox(user_email=current_user.email, user_name=current_user.name)
+        all_emails = db.get_emails(folder="all", user_email=current_user.email)
+
     return {
         "inbox": sum(1 for e in all_emails if e.folder == "inbox"),
         "unread": sum(1 for e in all_emails if not e.is_read and e.folder == "inbox"),
@@ -28,7 +32,7 @@ def get_email_counts(current_user: UserProfile = Depends(get_current_user)):
     }
 
 @router.get("", response_model=List[EmailItem])
-def list_emails(
+async def list_emails(
     folder: str = Query("inbox"),
     category: Optional[str] = Query(None),
     priority: Optional[str] = Query(None),
@@ -39,7 +43,7 @@ def list_emails(
     current_user: UserProfile = Depends(get_current_user)
 ):
     """Retrieve filtered list of emails."""
-    return db.get_emails(
+    emails = db.get_emails(
         folder=folder,
         category=category,
         priority=priority,
@@ -49,6 +53,19 @@ def list_emails(
         has_attachments=has_attachments,
         user_email=current_user.email
     )
+    if not emails and folder == "inbox" and not category and not priority and not search:
+        await gmail_service.sync_inbox(user_email=current_user.email, user_name=current_user.name)
+        emails = db.get_emails(
+            folder=folder,
+            category=category,
+            priority=priority,
+            search=search,
+            unread_only=unread_only,
+            starred_only=starred_only,
+            has_attachments=has_attachments,
+            user_email=current_user.email
+        )
+    return emails
 
 
 @router.get("/{email_id}", response_model=EmailItem)
@@ -66,7 +83,7 @@ def get_email(email_id: str, current_user: UserProfile = Depends(get_current_use
 @router.post("/sync")
 async def sync_emails(current_user: UserProfile = Depends(get_current_user)):
     """Trigger email sync pipeline and AI categorization."""
-    return await gmail_service.sync_inbox()
+    return await gmail_service.sync_inbox(user_email=current_user.email, user_name=current_user.name)
 
 @router.post("/{email_id}/toggle-read", response_model=EmailItem)
 def toggle_read(email_id: str, current_user: UserProfile = Depends(get_current_user)):

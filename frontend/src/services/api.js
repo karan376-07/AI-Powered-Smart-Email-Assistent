@@ -19,6 +19,19 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Handle 401 Unauthorized globally
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      console.warn("Unauthorized request (401). Clearing invalid token.");
+      localStorage.removeItem('smart_email_token');
+      localStorage.removeItem('smart_email_user');
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Production Real-time Email Engine
 const FALLBACK_EMAILS = [];
 
@@ -43,33 +56,21 @@ export const authAPI = {
   },
 
   googleLogin: async (payload = {}) => {
-    try {
-      const res = await api.post('/api/auth/google-login', payload);
-      const token = res.data?.access_token || res.data?.token;
-      if (token) {
-        localStorage.setItem('smart_email_token', token);
-      }
-      const rawUser = res.data?.user || {};
-      const user = {
-        email: rawUser.email || payload.email,
-        name: rawUser.name || payload.name || (payload.email ? payload.email.split('@')[0] : 'User'),
-        picture: rawUser.avatar || rawUser.picture || payload.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${payload.email || 'User'}`,
-        settings: { theme: 'light', language: 'en', notifications_enabled: true, critical_contacts: [] }
-      };
-      localStorage.setItem('smart_email_user', JSON.stringify(user));
-      return { ...res.data, user };
-    } catch (e) {
-      const mockToken = 'user_token_' + Date.now();
-      localStorage.setItem('smart_email_token', mockToken);
-      const user = {
-        email: payload.email,
-        name: payload.name || (payload.email ? payload.email.split('@')[0] : 'User'),
-        picture: payload.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${payload.email || 'User'}`,
-        settings: { theme: 'light', language: 'en', notifications_enabled: true, critical_contacts: [] }
-      };
-      localStorage.setItem('smart_email_user', JSON.stringify(user));
-      return { access_token: mockToken, token: mockToken, user };
+    const res = await api.post('/api/auth/google-login', payload);
+    const token = res.data?.access_token || res.data?.token;
+    if (token) {
+      localStorage.setItem('smart_email_token', token);
     }
+    const rawUser = res.data?.user || {};
+    const user = {
+      id: rawUser.id || 'usr-g-1',
+      email: rawUser.email || payload.email || 'user@gmail.com',
+      name: rawUser.name || payload.name || (payload.email ? payload.email.split('@')[0] : 'User'),
+      avatar: rawUser.avatar || rawUser.picture || payload.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${payload.email || 'User'}`,
+      connected_gmail: true
+    };
+    localStorage.setItem('smart_email_user', JSON.stringify(user));
+    return { ...res.data, user };
   },
 
   demoLogin: async (payload = {}) => {

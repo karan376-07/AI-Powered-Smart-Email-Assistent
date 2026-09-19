@@ -10,12 +10,12 @@ from app.models.schemas import UserProfile
 security = HTTPBearer(auto_error=False)
 
 DEMO_USER = UserProfile(
-    id="usr-karan-01",
-    email="karan.assistant@work.com",
-    name="Karan",
-    avatar="https://api.dicebear.com/7.x/bottts/svg?seed=KaranAssistant",
-    is_demo=True,
-    connected_gmail=False
+    id="usr-user-01",
+    email="user@gmail.com",
+    name="User Account",
+    avatar="https://api.dicebear.com/7.x/bottts/svg?seed=UserAccount",
+    is_demo=False,
+    connected_gmail=True
 )
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -49,7 +49,7 @@ async def get_current_user(credentials: Optional[HTTPAuthorizationCredentials] =
     if not credentials:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication token required. Please sign in with Google or explore demo mode.",
+            detail="Authentication token required. Please sign in with Google.",
             headers={"WWW-Authenticate": "Bearer"}
         )
     
@@ -63,12 +63,12 @@ async def get_current_user(credentials: Optional[HTTPAuthorizationCredentials] =
         )
     
     return UserProfile(
-        id=payload.get("sub", "usr-karan-01"),
-        email=payload.get("email", "karan.assistant@work.com"),
-        name=payload.get("name", "Karan"),
-        avatar=payload.get("avatar", "https://api.dicebear.com/7.x/bottts/svg?seed=KaranAssistant"),
+        id=payload.get("sub", "usr-user-01"),
+        email=payload.get("email", "user@gmail.com"),
+        name=payload.get("name", "User"),
+        avatar=payload.get("avatar", "https://api.dicebear.com/7.x/bottts/svg?seed=User"),
         is_demo=payload.get("is_demo", False),
-        connected_gmail=payload.get("connected_gmail", False)
+        connected_gmail=payload.get("connected_gmail", True)
     )
 
 async def get_current_user_optional(credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)) -> Optional[UserProfile]:
@@ -79,10 +79,10 @@ async def get_current_user_optional(credentials: Optional[HTTPAuthorizationCrede
     if not payload:
         return None
     return UserProfile(
-        id=payload.get("sub", "usr-karan-01"),
-        email=payload.get("email", "karan.assistant@work.com"),
-        name=payload.get("name", "Karan"),
-        avatar=payload.get("avatar", "https://api.dicebear.com/7.x/bottts/svg?seed=KaranAssistant"),
+        id=payload.get("sub", "usr-user-01"),
+        email=payload.get("email", "user@gmail.com"),
+        name=payload.get("name", "User"),
+        avatar=payload.get("avatar", "https://api.dicebear.com/7.x/bottts/svg?seed=User"),
         is_demo=payload.get("is_demo", False),
-        connected_gmail=payload.get("connected_gmail", False)
+        connected_gmail=payload.get("connected_gmail", True)
     )

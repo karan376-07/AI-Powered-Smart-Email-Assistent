@@ -185,6 +185,15 @@ export default function App() {
 
   const activeUser = user;
 
+  const folderCounts = {
+    inbox: emails.filter(e => e.folder === 'inbox' && !e.is_read).length,
+    urgent: emails.filter(e => e.priority === 'High' || e.is_starred).length,
+    sent: emails.filter(e => e.folder === 'sent').length,
+    drafts: emails.filter(e => e.folder === 'drafts').length,
+    spam: emails.filter(e => e.folder === 'spam' || e.is_spam).length,
+    trash: emails.filter(e => e.folder === 'trash' || e.is_trash).length,
+  };
+
   if (showLandingPage && !user) {
     if (showLoginModal) {
       return <LoginPage onLoginSuccess={handleLoginSuccess} />;
@@ -234,6 +243,7 @@ export default function App() {
           setSelectedCategory={setSelectedCategory}
           unreadCount={emails.filter(e => !e.is_read).length}
           urgentCount={emails.filter(e => e.priority === 'High').length}
+          folderCounts={folderCounts}
           user={activeUser}
           onOpenAISummary={() => setIsAISummaryOpen(true)}
           onOpenPhishingCenter={() => setIsPhishingOpen(true)}

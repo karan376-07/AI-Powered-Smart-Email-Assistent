@@ -22,13 +22,13 @@ export default function Sidebar({
   onOpenVoiceCommand
 }) {
   const folders = [
-    { id: 'inbox', label: 'Inbox', icon: Inbox, count: 12, badgeColor: 'bg-indigo-600 text-white' },
-    { id: 'important', label: 'Important', icon: Bookmark, count: 5, badgeColor: 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300' },
+    { id: 'inbox', label: 'Inbox', icon: Inbox, count: folderCounts.inbox ?? unreadCount, badgeColor: 'bg-indigo-600 text-white' },
+    { id: 'important', label: 'Important', icon: Bookmark, count: folderCounts.urgent ?? urgentCount, badgeColor: 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300' },
     { id: 'snoozed', label: 'Snoozed', icon: Clock },
-    { id: 'sent', label: 'Sent', icon: Send },
-    { id: 'drafts', label: 'Drafts', icon: FileText, count: 3 },
-    { id: 'spam', label: 'Spam', icon: AlertTriangle, count: 2, badgeColor: 'bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300' },
-    { id: 'trash', label: 'Trash', icon: Trash2 },
+    { id: 'sent', label: 'Sent', icon: Send, count: folderCounts.sent },
+    { id: 'drafts', label: 'Drafts', icon: FileText, count: folderCounts.drafts },
+    { id: 'spam', label: 'Spam', icon: AlertTriangle, count: folderCounts.spam, badgeColor: 'bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300' },
+    { id: 'trash', label: 'Trash', icon: Trash2, count: folderCounts.trash },
   ];
 
   const userEmail = user?.email || "user@gmail.com";
