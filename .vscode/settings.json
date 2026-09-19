@@ -1,0 +1,11 @@
+{
+  "python.defaultInterpreterPath": "c:/Users/karan/OneDrive/Desktop/AI Powered Smart email Assistent/backend/venv/Scripts/python.exe",
+  "python.interpreterPath": "c:/Users/karan/OneDrive/Desktop/AI Powered Smart email Assistent/backend/venv/Scripts/python.exe",
+  "python.analysis.extraPaths": [
+    "c:/Users/karan/OneDrive/Desktop/AI Powered Smart email Assistent/backend"
+  ],
+  "python.analysis.venvPath": "c:/Users/karan/OneDrive/Desktop/AI Powered Smart email Assistent/backend",
+  "python.analysis.venv": "venv"
+}
+
+

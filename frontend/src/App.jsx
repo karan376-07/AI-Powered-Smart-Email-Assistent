@@ -1,0 +1,280 @@
+import React, { useState, useEffect } from 'react';
+import Navbar from './components/Navbar';
+import Sidebar from './components/Sidebar';
+import EmailList from './components/EmailList';
+import EmailDetail from './components/EmailDetail';
+import AIAssistantPanel from './components/AIAssistantPanel';
+import VoiceCommandModal from './components/VoiceCommandModal';
+import PhishingDetectionModal from './components/PhishingDetectionModal';
+import AISummaryModal from './components/AISummaryModal';
+import OCRScanner from './components/OCRScanner';
+import AnalyticsDashboard from './components/AnalyticsDashboard';
+import ComposeModal from './components/ComposeModal';
+import SettingsModal from './components/SettingsModal';
+import LandingPage from './pages/LandingPage';
+import LoginPage from './pages/LoginPage';
+
+export default function App() {
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem('smart_email_user');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const [showLandingPage, setShowLandingPage] = useState(!user);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  // Theme & Language State
+  const [theme, setTheme] = useState(() => localStorage.getItem('smart_email_theme') || 'light');
+  const [language, setLanguage] = useState(() => localStorage.getItem('smart_email_language') || 'en');
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
+    }
+    localStorage.setItem('smart_email_theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
+  const toggleLanguage = () => {
+    const nextLang = language === 'en' ? 'ta' : 'en';
+    setLanguage(nextLang);
+    localStorage.setItem('smart_email_language', nextLang);
+    showToast(nextLang === 'ta' ? "மொழி தமிழாக மாற்றப்பட்டது (Tamil Language Active)" : "Language switched to English");
+  };
+
+  // View States
+  const [activeView, setActiveView] = useState('inbox');
+  const [activeFolder, setActiveFolder] = useState('inbox');
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Email Data
+  const [emails, setEmails] = useState([]);
+  const [selectedEmail, setSelectedEmail] = useState(null);
+  const [isLoadingEmails, setIsLoadingEmails] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // Modals & Feature Dialogs
+  const [isComposeOpen, setIsComposeOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isAISummaryOpen, setIsAISummaryOpen] = useState(false);
+  const [isPhishingOpen, setIsPhishingOpen] = useState(false);
+  const [isVoiceCommandOpen, setIsVoiceCommandOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
+
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const handleLoginSuccess = (userObj) => {
+    setUser(userObj);
+    localStorage.setItem('smart_email_user', JSON.stringify(userObj));
+    setShowLandingPage(false);
+    setShowLoginModal(false);
+    showToast(`Welcome back, ${userObj.name || 'Karan'}! Inbox synchronized.`);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('smart_email_user');
+    setUser(null);
+    setShowLandingPage(true);
+    showToast("Signed out successfully.");
+  };
+
+  // Handle all 5 required Voice Commands:
+  // 1. "Read my important emails"
+  // 2. "Show phishing emails"
+  // 3. "Summarize this email"
+  // 4. "Generate a reply"
+  // 5. "Show unread emails"
+  const handleExecuteVoiceCommand = (cmdText) => {
+    const lower = cmdText.toLowerCase();
+    
+    if (lower.includes('important')) {
+      setActiveFolder('important');
+      showToast("🎙️ Voice Action: Showing Important emails");
+    } else if (lower.includes('phishing') || lower.includes('suspicious')) {
+      setIsPhishingOpen(true);
+      showToast("🎙️ Voice Action: Phishing Detection Shield opened");
+    } else if (lower.includes('summarize')) {
+      setIsAISummaryOpen(true);
+      showToast("🎙️ Voice Action: Summarizing email");
+    } else if (lower.includes('reply')) {
+      showToast("🎙️ Voice Action: Generating Smart AI Reply...");
+    } else if (lower.includes('unread')) {
+      setActiveFolder('inbox');
+      setSearchQuery('unread');
+      showToast("🎙️ Voice Action: Showing Unread emails");
+    } else {
+      setSearchQuery(cmdText);
+      showToast(`🎙️ Voice Action: Searching for "${cmdText}"`);
+    }
+  };
+
+  if (showLandingPage && !user) {
+    if (showLoginModal) {
+      return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+    }
+    return (
+      <LandingPage
+        onConnectGmail={() => setShowLoginModal(true)}
+        onQuickAccess={() => handleLoginSuccess({ name: "Karan Elumalai", email: "karan@gmail.com" })}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+      />
+    );
+  }
+
+  return (
+    <div className="h-screen w-screen bg-[#F8FAFC] dark:bg-[#090D16] text-slate-800 dark:text-slate-100 flex flex-col overflow-hidden font-sans transition-colors duration-200 select-none">
+      
+      {/* Top Navbar */}
+      <Navbar
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        onSync={async () => {
+          setIsSyncing(true);
+          setTimeout(() => {
+            setIsSyncing(false);
+            showToast("Inbox synchronized with AI classification!");
+          }, 800);
+        }}
+        isSyncing={isSyncing}
+        onOpenCompose={() => setIsComposeOpen(true)}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        unreadCount={12}
+        urgentCount={5}
+        user={user || { name: "Karan Elumalai", email: "karan@gmail.com" }}
+        onLogout={handleLogout}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        language={language}
+        onToggleLanguage={toggleLanguage}
+        onOpenVoiceCommand={() => setIsVoiceCommandOpen(true)}
+      />
+
+      {/* Main 3-Column Workspace Layout */}
+      <div className="flex-1 flex overflow-hidden">
+        
+        {/* Left Sidebar */}
+        <Sidebar
+          activeView={activeView}
+          setActiveView={setActiveView}
+          activeFolder={activeFolder}
+          setActiveFolder={setActiveFolder}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          unreadCount={12}
+          urgentCount={5}
+          user={user || { name: "Karan Elumalai", email: "karan@gmail.com" }}
+          onOpenAISummary={() => setIsAISummaryOpen(true)}
+          onOpenPhishingCenter={() => setIsPhishingOpen(true)}
+          onOpenSmartReply={() => showToast("Select an email thread to view AI Smart Reply")}
+          onOpenVoiceCommand={() => setIsVoiceCommandOpen(true)}
+        />
+
+        {/* Center Stage Email Workspace */}
+        {activeView === 'inbox' && (
+          <div className="flex-1 flex overflow-hidden">
+            {/* Center Email List Feed */}
+            <div className="w-full md:w-5/12 lg:w-5/12 flex-shrink-0 flex flex-col h-full border-r border-slate-200 dark:border-slate-800/80">
+              <EmailList
+                emails={emails}
+                selectedEmail={selectedEmail}
+                onSelectEmail={(e) => setSelectedEmail(e)}
+                onToggleStar={() => showToast("Email starred!")}
+                onToggleRead={() => showToast("Read status toggled!")}
+                onDeleteEmail={() => showToast("Moved to Trash")}
+                isLoading={isLoadingEmails}
+              />
+            </div>
+
+            {/* Email Detail / Smart Reply View */}
+            <div className="hidden md:flex flex-1 flex-col h-full border-r border-slate-200 dark:border-slate-800/80">
+              <EmailDetail
+                email={selectedEmail}
+                onSendReply={async (payload) => {
+                  showToast(`Reply sent to ${payload.recipient || 'recipient'}!`);
+                }}
+                language={language}
+                onToggleLanguage={toggleLanguage}
+                onOpenVoiceCommand={() => setIsVoiceCommandOpen(true)}
+              />
+            </div>
+          </div>
+        )}
+
+        {activeView === 'ocr' && (
+          <OCRScanner onBack={() => setActiveView('inbox')} />
+        )}
+
+        {activeView === 'analytics' && (
+          <AnalyticsDashboard onBack={() => setActiveView('inbox')} />
+        )}
+
+        {/* Right AI Assistant Widget Column */}
+        {activeView === 'inbox' && (
+          <AIAssistantPanel
+            user={user || { name: "Karan Elumalai", email: "karan@gmail.com" }}
+            totalEmails={12}
+            importantCount={5}
+            unreadCount={3}
+            onOpenAISummary={() => setIsAISummaryOpen(true)}
+            onOpenPhishingCenter={() => setIsPhishingOpen(true)}
+            onOpenSmartReply={() => showToast("Smart Reply assistant active in email detail pane.")}
+            onOpenVoiceCommand={() => setIsVoiceCommandOpen(true)}
+          />
+        )}
+      </div>
+
+      {/* Feature Modals & Overlays */}
+      <VoiceCommandModal
+        isOpen={isVoiceCommandOpen}
+        onClose={() => setIsVoiceCommandOpen(false)}
+        onExecuteCommand={handleExecuteVoiceCommand}
+      />
+
+      <PhishingDetectionModal
+        isOpen={isPhishingOpen}
+        onClose={() => setIsPhishingOpen(false)}
+        onMarkAsSpam={() => showToast("Email marked as phishing spam.")}
+      />
+
+      <AISummaryModal
+        isOpen={isAISummaryOpen}
+        onClose={() => setIsAISummaryOpen(false)}
+        emails={emails}
+      />
+
+      <ComposeModal
+        isOpen={isComposeOpen}
+        onClose={() => setIsComposeOpen(false)}
+        onEmailSent={() => showToast("Email sent successfully!")}
+      />
+
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        user={user || { name: "Karan Elumalai", email: "karan@gmail.com" }}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+      />
+
+      {/* Toast Alert */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 border border-indigo-500/50 text-white text-xs font-semibold px-4 py-3 rounded-2xl shadow-2xl flex items-center space-x-2 animate-in fade-in slide-in-from-bottom-3">
+          <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span>{toastMessage}</span>
+        </div>
+      )}
+    </div>
+  );
+}

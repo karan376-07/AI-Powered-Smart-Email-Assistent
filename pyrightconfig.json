@@ -1,0 +1,10 @@
+{
+  "include": [
+    "backend"
+  ],
+  "venvPath": "c:/Users/karan/OneDrive/Desktop/AI Powered Smart email Assistent/backend",
+  "venv": "venv",
+  "extraPaths": [
+    "c:/Users/karan/OneDrive/Desktop/AI Powered Smart email Assistent/backend"
+  ]
+}
